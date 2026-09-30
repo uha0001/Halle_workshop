@@ -1,0 +1,63 @@
+# dl sequences
+rule get_sequences:
+    output:
+        directory("results/{genus}_{species}")
+    params:
+        genus = "{genus}",
+        species = "{species}"
+    shadow:
+        "shallow"
+    wildcard_constraints:
+        species = "[A-Za-z]+"
+    shell:
+        """
+        bin/datasets download genome taxon "{params.genus} {params.species}" --reference --include genome --filename "{params.genus}_{params.species}"
+        unzip "{params.genus}_{params.species}"
+        mv ncbi_dataset "{output}"
+        """
+
+rule rename_seq:
+    input:
+        "results/{genus}_{species}"
+    output:
+        "results/{genus}_{species}.fa"
+    shell:
+        """
+        python3 bin/softlink_assembly.py "{input}" "{output}"
+        """
+
+rule run_assembly_stats:
+    input:
+        assembly="{genus}_{species}.fa",
+    output:
+        assembly_stats="{genus}_{species}_stats.txt",
+    params:
+        # Tab delimited output, with a header, is set as the default. Other options are available:
+        #   -l <int>
+        #       Minimum length cutoff for each sequence.
+        #       Sequences shorter than the cutoff will be ignored [1]
+        #   -s
+        #       Print 'grep friendly' output
+        #   -t
+        #       Print tab-delimited output
+        #   -u
+        #       Print tab-delimited output with no header line
+        # If you want to add multiple options just delimit them with a space.
+        # Note that you can only pick one output format
+        # Check https://github.com/sanger-pathogens/assembly-stats for more details
+        extra="-t",
+    log: "logs/{genus}_{species}.assembly-stats.log",
+    threads: 1
+    wrapper: "v2.9.1/bio/assembly-stats"
+
+
+# calculate gc content
+rule get_stats:
+    input:
+        "results/{genus}_{species}.fa"
+    output:
+        "results/{genus}_{species}_gc.tsv"
+    shell:
+        """
+        python3 bin/get_gc_for_sequences.py "{input}" "{output}"
+        """

@@ -1,0 +1,9 @@
+# write a rule that downloads sequences using datasets
+# basic usage for datasets :
+# bin/datasets download genome taxon
+
+# oh no, the file downloaded has a weird name that is not the species name !! Use the softlink_assembly script to write a rule that takes the downloaded folder and output a file that is named species.fa
+
+# write a rule that uses the assembly-stats wrapper to generate a small report of the statistics of the assembly
+
+# write a rule that generates a gc report with the get_gc_for_sequences script
